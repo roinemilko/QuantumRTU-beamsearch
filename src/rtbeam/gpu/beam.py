@@ -97,13 +97,17 @@ class GpuBeamSearch:
     """IonQ's beam search with all BP on the GPU; see module docstring."""
 
     def __init__(self, problem: DecodingProblem, config: BeamConfig, precision: Precision = FLOAT32,
-                 shot_chunk: int = 1024) -> None:
+                 shot_chunk: int = 1024, beam_memory: int = 2 * 2**30) -> None:
+        """``beam_memory`` bounds the device bytes of one beam phase: at most that many
+        bytes' worth of shots (≈3 message arrays of 2·beam_width runs each) search together."""
         graph = TannerGraph.from_check_matrix(problem.check_matrix)
         prior_llr = MinSum(graph, problem.priors).prior_llr
         self.__launcher = BpLauncher(graph, prior_llr, precision)
         self.__inputs = ChildInputs(problem.check_matrix)
         self.__planner_args = (config, prior_llr, graph.bit_degree > 2)
         self.__config, self.__shot_chunk, self.__n = config, shot_chunk, graph.num_bits
+        per_shot = 3 * 2 * config.beam_width * graph.num_edges * np.dtype(precision.dtype).itemsize
+        self.__beam_shots = max(1, beam_memory // per_shot)
 
     def decode_batch(self, syndromes: Bits) -> DecodeBatch:
         """Decode all shots together; blocks until done. ``seconds`` is NaN (batch-level timing only)."""
@@ -119,11 +123,13 @@ class GpuBeamSearch:
         roots = self.__launcher.run(self.__launcher.initial_messages(runs), cp.ones((runs, self.__n), cp.uint8),
                                     cp.asarray(syndromes), self.__config.initial_iters, want_summary=False)
         corrections = cast(Bits, roots.decisions.get())
-        planners = self.__start_planners(roots, corrections)
-        while work := [(shot, p, cs) for shot, p in planners.items() if (cs := p.children())]:
-            self.__run_round(syndromes, work)
-        for shot, planner in planners.items():
-            corrections[shot] = planner.outcome().correction
+        planners = list(self.__start_planners(roots, corrections).items())
+        for lo in range(0, len(planners), self.__beam_shots):
+            group = planners[lo:lo + self.__beam_shots]
+            while work := [(shot, p, cs) for shot, p in group if (cs := p.children())]:
+                self.__run_round(syndromes, work)
+            for shot, planner in group:
+                corrections[shot] = planner.outcome().correction
         return corrections
 
     def __start_planners(self, roots: DeviceRuns, decisions: Bits) -> dict[int, ShotPlanner]:
