@@ -18,7 +18,8 @@ import numpy as np
 from rtbeam.decoders import PRESETS
 from rtbeam.golden import DecoderRun, ShotSet
 from rtbeam.problem import DecodingProblem
-from rtbeam.reference.beam import ReferenceBeamSearch, ShotOutcome
+from rtbeam.reference.beam import ReferenceBeamSearch
+from rtbeam.search import ShotOutcome
 
 ROOT = Path(__file__).resolve().parents[1]
 GOLDEN = ROOT / "data" / "golden"
