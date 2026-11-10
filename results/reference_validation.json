@@ -1,91 +1,84 @@
 {
   "bb144_z_p0.0005/beam32_340": {
-    "shots": 500,
-    "identical": 500,
+    "shots": 150,
+    "identical": 150,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 495,
-      "1": 5
+      "0": 148,
+      "1": 2
     }
   },
   "bb144_z_p0.0005/beam8_230": {
-    "shots": 1000,
-    "identical": 1000,
+    "shots": 300,
+    "identical": 300,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 987,
-      "1": 12,
-      "2": 1
+      "0": 295,
+      "1": 5
     }
   },
   "bb144_z_p0.001/beam32_340": {
-    "shots": 500,
-    "identical": 500,
+    "shots": 150,
+    "identical": 150,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 494,
-      "1": 6
-    }
-  },
-  "bb144_z_p0.001/beam64_640": {
-    "shots": 200,
-    "identical": 200,
-    "mismatched_shots": [],
-    "rounds_histogram": {
-      "0": 199,
+      "0": 149,
       "1": 1
     }
   },
-  "bb144_z_p0.001/beam8_230": {
-    "shots": 1000,
-    "identical": 1000,
+  "bb144_z_p0.001/beam64_640": {
+    "shots": 60,
+    "identical": 60,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 963,
-      "1": 37
+      "0": 60
+    }
+  },
+  "bb144_z_p0.001/beam8_230": {
+    "shots": 300,
+    "identical": 300,
+    "mismatched_shots": [],
+    "rounds_histogram": {
+      "0": 288,
+      "1": 12
     }
   },
   "bb144_z_p0.001_32res/beam64_32res_640": {
-    "shots": 100,
-    "identical": 100,
+    "shots": 30,
+    "identical": 30,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "8": 2,
-      "9": 1,
-      "10": 4,
-      "11": 10,
-      "12": 6,
-      "13": 11,
-      "14": 19,
-      "15": 7,
-      "16": 15,
-      "17": 8,
-      "18": 7,
-      "19": 2,
-      "20": 8
+      "8": 1,
+      "11": 5,
+      "12": 2,
+      "13": 5,
+      "14": 4,
+      "15": 2,
+      "16": 5,
+      "17": 4,
+      "18": 1,
+      "20": 1
     }
   },
   "bb144_z_p0.002/beam32_340": {
-    "shots": 500,
-    "identical": 500,
+    "shots": 150,
+    "identical": 150,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 460,
-      "1": 33,
-      "2": 6,
-      "3": 1
+      "0": 139,
+      "1": 9,
+      "2": 2
     }
   },
   "bb144_z_p0.002/beam8_230": {
-    "shots": 1000,
-    "identical": 1000,
+    "shots": 300,
+    "identical": 300,
     "mismatched_shots": [],
     "rounds_histogram": {
-      "0": 838,
-      "1": 136,
-      "2": 21,
-      "3": 3,
-      "4": 2
+      "0": 251,
+      "1": 44,
+      "2": 4,
+      "4": 1
     }
   }
 }
