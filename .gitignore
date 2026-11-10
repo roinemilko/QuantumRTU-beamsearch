@@ -1,0 +1,13 @@
+.venv/
+.cache/
+.tmp/
+external/
+data/*.npz
+results/**/raw/
+*.so
+build/
+__pycache__/
+*:Zone.Identifier
+rules/
+PROGRESS.md
+CLAUDE.md

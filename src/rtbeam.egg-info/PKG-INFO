@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: rtbeam
+Version: 0.1.0
+Summary: Batched BP beam-search decoding for QLDPC codes: CPU reference, CUDA and RT-core (OptiX) variants
+Requires-Python: >=3.10
+Requires-Dist: numpy>=2.0
+Requires-Dist: scipy>=1.10
+Requires-Dist: stim>=1.12
+Requires-Dist: sinter>=1.10
+Requires-Dist: stimbposd==0.1.0
+Requires-Dist: ldpc>=2.0

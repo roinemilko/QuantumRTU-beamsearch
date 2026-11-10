@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rtbeam"
+version = "0.1.0"
+description = "Batched BP beam-search decoding for QLDPC codes: CPU reference, CUDA and RT-core (OptiX) variants"
+requires-python = ">=3.10"
+dependencies = ["numpy>=2.0", "scipy>=1.10", "stim>=1.12", "sinter>=1.10", "stimbposd==0.1.0", "ldpc>=2.0"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+
+[[tool.mypy.overrides]]
+module = ["stim", "stimbposd.*", "beam_search_decoder.*", "sinter"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

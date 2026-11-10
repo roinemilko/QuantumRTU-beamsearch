@@ -1,0 +1,9 @@
+BB[[144,12,12]],memory_Z,error_rate=0.0005,syndrome_rounds=12 beam32_340: 500/500 identical, rounds {0: 495, 1: 5}
+BB[[144,12,12]],memory_Z,error_rate=0.0005,syndrome_rounds=12 beam8_230: 1000/1000 identical, rounds {0: 987, 1: 12, 2: 1}
+BB[[144,12,12]],memory_Z,error_rate=0.001,syndrome_rounds=12 beam32_340: 500/500 identical, rounds {0: 494, 1: 6}
+BB[[144,12,12]],memory_Z,error_rate=0.001,syndrome_rounds=12 beam64_640: 200/200 identical, rounds {0: 199, 1: 1}
+BB[[144,12,12]],memory_Z,error_rate=0.001,syndrome_rounds=12 beam8_230: 1000/1000 identical, rounds {0: 963, 1: 37}
+BB[[144,12,12]],memory_Z,error_rate=0.001,syndrome_rounds=12 beam64_32res_640: 100/100 identical, rounds {8: 2, 9: 1, 10: 4, 11: 10, 12: 6, 13: 11, 14: 19, 15: 7, 16: 15, 17: 8, 18: 7, 19: 2, 20: 8}
+BB[[144,12,12]],memory_Z,error_rate=0.002,syndrome_rounds=12 beam32_340: 500/500 identical, rounds {0: 460, 1: 33, 2: 6, 3: 1}
+BB[[144,12,12]],memory_Z,error_rate=0.002,syndrome_rounds=12 beam8_230: 1000/1000 identical, rounds {0: 838, 1: 136, 2: 21, 3: 3, 4: 2}
+validate exit 0
