@@ -20,7 +20,7 @@ CIRCUITS = ROOT / "external" / "BeamSearchDecoder" / "StimCircuit"
 OUT = ROOT / "results" / "ler"
 P_VALUES = ("0.001", "0.002", "0.003", "0.004", "0.005", "0.006")
 SHOT_CAP = {"0.001": 2 * 10**7}  # 100 failures would need ~1e8-1e9 shots per job here
-BACKENDS = ("gpu-fp32", "gpu-fp64", "ionq")
+BACKENDS = ("gpu-fp32", "gpu-fp64", "rt-fp32", "rt-fp64", "ionq")
 
 
 def circuit_path(p: str, basis: str) -> Path:
@@ -36,7 +36,9 @@ def make_decoder(backend: str, problem: DecodingProblem, preset: str) -> Decoder
         from rtbeam.ionq import IonQBeamSearch
         return IonQBeamSearch(problem, PRESETS[preset])
     from rtbeam.gpu.beam import FLOAT32, FLOAT64, GpuBeamSearch
-    return GpuBeamSearch(problem, PRESETS[preset], FLOAT64 if backend == "gpu-fp64" else FLOAT32)
+    kind, precision = backend.split("-")
+    return GpuBeamSearch(problem, PRESETS[preset], FLOAT64 if precision == "fp64" else FLOAT32,
+                         backend="rt" if kind == "rt" else "cuda")
 
 
 def job(args: tuple[str, str, str, str, Budget]) -> str:

@@ -1,8 +1,9 @@
 """Latency (batch = 1) and throughput (batch sweep) of the CUDA decoder on the golden shot sets.
 
 Latency is wall time per ``decode_batch`` call incl. host<->device copies and Python control,
-i.e. comparable to the CPU baseline's per-shot time. Writes results/gpu_baseline.json.
-Usage: bench_gpu.py [latency_shots]
+i.e. comparable to the CPU baseline's per-shot time. Writes results/gpu_baseline.json
+(backend cuda) or results/rt_baseline.json (backend rt).
+Usage: bench_gpu.py [latency_shots] [cuda|rt]
 """
 
 from __future__ import annotations
@@ -16,7 +17,7 @@ from pathlib import Path
 
 import numpy as np
 
-from rtbeam.decoders import PRESETS
+from rtbeam.decoders import PRESETS, Bits
 from rtbeam.golden import ShotSet
 from rtbeam.gpu.beam import FLOAT32, FLOAT64, GpuBeamSearch, Precision
 from rtbeam.problem import DecodingProblem
@@ -29,7 +30,7 @@ CASES = (("bb144_z_p0.0005", ("beam8_230", "beam32_340")),
 BATCHES = (1, 16, 64, 256, 1024, 4096, 10_000)
 
 
-def main(latency_shots: int) -> None:
+def main(latency_shots: int, backend: str) -> None:
     report: dict[str, object] = {"host": host_info()}
     for key, presets in CASES:
         shots = ShotSet.load(ROOT / "data" / "golden" / key / "shots.npz")
@@ -37,13 +38,15 @@ def main(latency_shots: int) -> None:
         for preset in presets:
             for precision in (FLOAT32, FLOAT64):
                 name = f"{key}/{preset}/{precision.name}"
-                report[name] = bench(GpuBeamSearch(problem, PRESETS[preset], precision), shots.syndromes,
+                decoder = GpuBeamSearch(problem, PRESETS[preset], precision, backend=backend)
+                report[name] = bench(decoder, shots.syndromes,
                                      latency_shots if precision is FLOAT32 else latency_shots // 5)
                 print(name, json.dumps(report[name]), flush=True)
-    (ROOT / "results" / "gpu_baseline.json").write_text(json.dumps(report, indent=2))
+    name = "gpu_baseline.json" if backend == "cuda" else f"{backend}_baseline.json"
+    (ROOT / "results" / name).write_text(json.dumps(report, indent=2))
 
 
-def bench(decoder: GpuBeamSearch, syndromes: np.ndarray, latency_shots: int) -> dict[str, object]:
+def bench(decoder: GpuBeamSearch, syndromes: Bits, latency_shots: int) -> dict[str, object]:
     decoder.decode_batch(syndromes[:512])  # compile every kernel (incl. beam rounds) + warm up
     seconds = np.array([timed(decoder, syndromes[i:i + 1]) for i in range(latency_shots)])
     throughput = {str(b): syndromes[:b].shape[0] / best_of(decoder, syndromes[:b], 2 if b <= 1024 else 1)
@@ -52,13 +55,13 @@ def bench(decoder: GpuBeamSearch, syndromes: np.ndarray, latency_shots: int) -> 
             "throughput_shots_per_s": throughput}
 
 
-def timed(decoder: GpuBeamSearch, batch: np.ndarray) -> float:
+def timed(decoder: GpuBeamSearch, batch: Bits) -> float:
     start = time.perf_counter()
     decoder.decode_batch(batch)
     return time.perf_counter() - start
 
 
-def best_of(decoder: GpuBeamSearch, batch: np.ndarray, repeats: int) -> float:
+def best_of(decoder: GpuBeamSearch, batch: Bits, repeats: int) -> float:
     return min(timed(decoder, batch) for _ in range(repeats))
 
 
@@ -69,4 +72,4 @@ def host_info() -> dict[str, str]:
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]) if len(sys.argv) > 1 else 10_000)
+    main(int(sys.argv[1]) if len(sys.argv) > 1 else 10_000, sys.argv[2] if len(sys.argv) > 2 else "cuda")

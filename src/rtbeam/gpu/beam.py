@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Protocol, cast
 
 import cupy as cp
 import numpy as np
@@ -51,6 +51,15 @@ class DeviceRuns:
     llr_sums: DeviceArray
     score: DeviceArray
     branch: DeviceArray
+
+
+class Launcher(Protocol):
+    """Runs batches of masked BP; implemented by :class:`BpLauncher` (CUDA) and ``RtLauncher`` (OptiX)."""
+
+    def initial_messages(self, runs: int) -> DeviceArray: ...
+
+    def run(self, v2c: DeviceArray, free: DeviceArray, syndromes: DeviceArray, max_iters: int,
+            want_summary: bool) -> DeviceRuns: ...
 
 
 class BpLauncher:
@@ -97,12 +106,18 @@ class GpuBeamSearch:
     """IonQ's beam search with all BP on the GPU; see module docstring."""
 
     def __init__(self, problem: DecodingProblem, config: BeamConfig, precision: Precision = FLOAT32,
-                 shot_chunk: int = 1024, beam_memory: int = 2 * 2**30) -> None:
+                 shot_chunk: int = 1024, beam_memory: int = 2 * 2**30, backend: str = "cuda") -> None:
         """``beam_memory`` bounds the device bytes of one beam phase: at most that many
-        bytes' worth of shots (≈3 message arrays of 2·beam_width runs each) search together."""
+        bytes' worth of shots (≈3 message arrays of 2·beam_width runs each) search together.
+        ``backend``: "cuda" (one kernel per BP run batch) or "rt" (OptiX ray launches)."""
         graph = TannerGraph.from_check_matrix(problem.check_matrix)
         prior_llr = MinSum(graph, problem.priors).prior_llr
-        self.__launcher = BpLauncher(graph, prior_llr, precision)
+        self.__launcher: Launcher
+        if backend == "rt":
+            from rtbeam.rt.launcher import RtLauncher
+            self.__launcher = RtLauncher(graph, prior_llr, precision)
+        else:
+            self.__launcher = BpLauncher(graph, prior_llr, precision)
         self.__inputs = ChildInputs(problem.check_matrix)
         self.__planner_args = (config, prior_llr, graph.bit_degree > 2)
         self.__config, self.__shot_chunk, self.__n = config, shot_chunk, graph.num_bits

@@ -105,6 +105,20 @@ __device__ __forceinline__ int branch_bit(int n, const unsigned char* fr, const 
     return best_idx[0] == 0x7fffffff ? -1 : best_idx[0];
 }
 
+// Score (sequential left-to-right sum of |LS| / iterations, as the C++ loop; fixed bits add +0.0)
+// and next branch bit of one run; called by every thread of the block.
+__device__ __forceinline__ void summarize(int n, int max_iters, int done_at, const unsigned char* fr,
+                                          const unsigned char* branchable, const REAL* LS, double* score, int* branch)
+{
+    const int bit = branch_bit(n, fr, branchable, LS);
+    if (threadIdx.x == 0) {
+        double s = 0.0;
+        for (int b = 0; b < n; ++b) s += (double)fabs(LS[b]);
+        *score = s / (double)(done_at ? done_at : max_iters);
+        *branch = bit;
+    }
+}
+
 extern "C" __global__ void __launch_bounds__(BLOCK) bp_runs(
     const int m, const int n, const int max_iters, const int want_summary,
     const int* __restrict__ row_ptr, const int* __restrict__ row_edges,
@@ -137,12 +151,15 @@ extern "C" __global__ void __launch_bounds__(BLOCK) bp_runs(
     if (threadIdx.x == 0) converged_at[r] = done_at;
     if (!want_summary) return;
     __syncthreads();
-    const int branch = branch_bit(n, fr, branchable, LS);
-    if (threadIdx.x == 0) {
-        // Sequential left-to-right sum, as the C++ loop does (fixed bits contribute +0.0).
-        double s = 0.0;
-        for (int b = 0; b < n; ++b) s += (double)fabs(LS[b]);
-        score_out[r] = s / (double)(done_at ? done_at : max_iters);
-        branch_out[r] = branch;
-    }
+    summarize(n, max_iters, done_at, fr, branchable, LS, score_out + r, branch_out + r);
+}
+
+// Summary only, for backends that run BP elsewhere (the OptiX mapping); one block per run.
+extern "C" __global__ void __launch_bounds__(BLOCK) bp_summary(
+    const int n, const int max_iters, const unsigned char* __restrict__ branchable,
+    const unsigned char* __restrict__ free_all, const REAL* __restrict__ ls_all,
+    const int* __restrict__ converged_at, double* __restrict__ score_out, int* __restrict__ branch_out)
+{
+    const size_t r = blockIdx.x;
+    summarize(n, max_iters, converged_at[r], free_all + r * n, branchable, ls_all + r * n, score_out + r, branch_out + r);
 }
