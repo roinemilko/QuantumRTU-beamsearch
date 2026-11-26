@@ -52,3 +52,23 @@ def test_rt_bp_equals_cuda_bp(setup: Setup, precision: Precision) -> None:
                                        runs.branch)])
     for cuda, rt in zip(*outs):
         np.testing.assert_array_equal(cuda, rt)
+
+
+@pytest.mark.parametrize("options", [
+    {"cache_neighbors": True},
+    {"check_every": 4},
+    {"reorder_geometry": True},
+    {"check_every": 4, "cache_neighbors": True, "reorder_geometry": True},
+])
+def test_rt_optimizations_equal_cuda(setup: Setup, options: dict[str, object]) -> None:
+    problem, graph, prior = setup
+    shots = ShotSet.load(ROOT / "data" / "golden" / "bb144_z_p0.002" / "shots.npz").syndromes[:64]
+    rng = np.random.default_rng(19)
+    free = (rng.random((shots.shape[0], graph.num_bits)) > 0.02).astype(np.uint8)
+    cuda_launcher = BpLauncher(graph, prior, FLOAT32)
+    cuda = cuda_launcher.run(cuda_launcher.initial_messages(shots.shape[0]), cp.asarray(free), cp.asarray(shots), 30, True)
+    rt_launcher = RtLauncher(graph, prior, FLOAT32, **options)
+    rt = rt_launcher.run(rt_launcher.initial_messages(shots.shape[0]), cp.asarray(free), cp.asarray(shots), 30, True)
+    for expected, actual in zip((cuda.v2c, cuda.converged_at, cuda.decisions, cuda.llr_sums, cuda.score, cuda.branch),
+                                (rt.v2c, rt.converged_at, rt.decisions, rt.llr_sums, rt.score, rt.branch)):
+        np.testing.assert_array_equal(expected.get(), actual.get())

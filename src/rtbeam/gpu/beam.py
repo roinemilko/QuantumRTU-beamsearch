@@ -42,6 +42,21 @@ FLOAT32 = Precision("float32", np.float32, "3.402823466e38f")
 
 
 @dataclass(frozen=True)
+class Freezing:
+    """S1 frontier freezing for beam-child runs (``bp_runs_frontier``): after ``warm`` full
+    iterations, bits whose messages all agree in sign with ``|v| >= tau`` (and whose checks are
+    satisfied and untouched by the child's new fixing) stay frozen for the rest of the run.
+    ``tau = inf`` disables freezing and reproduces ``bp_runs`` exactly. ``initial_warm``: also
+    freeze the initial (root) BP after that many full iterations; None leaves it unpruned.
+    ``refresh`` > 0: after that many pruned iterations, one full iteration and a new frontier."""
+
+    tau: float
+    warm: int = 0
+    initial_warm: int | None = None
+    refresh: int = 0
+
+
+@dataclass(frozen=True)
 class DeviceRuns:
     """Device-resident outputs of one batch of BP runs (row r = run r)."""
 
@@ -51,6 +66,7 @@ class DeviceRuns:
     llr_sums: DeviceArray
     score: DeviceArray
     branch: DeviceArray
+    frontier_sizes: DeviceArray | None = None  # (runs × 3): live checks, frontier edges, frontier bits
 
 
 class Launcher(Protocol):
@@ -65,10 +81,14 @@ class Launcher(Protocol):
 class BpLauncher:
     """Owns the graph on the device and launches ``bp_runs`` in chunks of at most ``max_runs``."""
 
-    def __init__(self, graph: TannerGraph, prior_llr: NDArray[np.float64], precision: Precision, max_runs: int = 2048) -> None:
+    def __init__(self, graph: TannerGraph, prior_llr: NDArray[np.float64], precision: Precision, max_runs: int = 2048,
+                 freezing: Freezing | None = None) -> None:
         real = "double" if precision.dtype is np.float64 else "float"
         module = cp.RawModule(code=_SOURCE, options=("--fmad=false", f"-DREAL={real}", f"-DREAL_MAX={precision.real_max}"))
         self.__kernel = module.get_function("bp_runs")
+        self.__frontier_kernel = module.get_function("bp_runs_frontier")
+        self.__freezing = freezing
+        self.__edge_check = _i32(graph.edge_check)
         self.__dtype, self.__max_runs = precision.dtype, max_runs
         self.__m, self.__n, self.__e = graph.num_checks, graph.num_bits, graph.num_edges
         self.__arrays = (
@@ -82,42 +102,79 @@ class BpLauncher:
         return cp.tile(self.__initial_v2c, (runs, 1))
 
     def run(self, v2c: DeviceArray, free: DeviceArray, syndromes: DeviceArray, max_iters: int,
-            want_summary: bool) -> DeviceRuns:
-        """Run BP on ``v2c`` (runs × edges; in place if C-contiguous); inputs are uint8 (runs × bits / checks)."""
+            want_summary: bool, seeds: DeviceArray | None = None, warm: int | None = None) -> DeviceRuns:
+        """Run BP on ``v2c`` (runs × edges; in place if C-contiguous); inputs are uint8 (runs × bits / checks).
+
+        With ``freezing`` set and ``seeds`` given (int32 per run: the bit the run's child just
+        fixed, -1 for none), runs use frontier freezing and report ``frontier_sizes``; ``warm``
+        overrides ``freezing.warm``."""
         runs = v2c.shape[0]
         v2c, free, syndromes = (cp.ascontiguousarray(a) for a in (v2c, free, syndromes))
+        frontier = self.__freezing is not None and seeds is not None
         out = DeviceRuns(v2c, cp.zeros(runs, cp.int32), cp.zeros((runs, self.__n), cp.uint8),
-                         cp.zeros((runs, self.__n), self.__dtype), cp.zeros(runs, cp.float64), cp.zeros(runs, cp.int32))
+                         cp.zeros((runs, self.__n), self.__dtype), cp.zeros(runs, cp.float64), cp.zeros(runs, cp.int32),
+                         cp.zeros((runs, 3), cp.int32) if frontier else None)
+        inputs = (free, syndromes, cp.ascontiguousarray(seeds, dtype=cp.int32) if frontier else None)
         for lo in range(0, runs, self.__max_runs):
-            self.__launch(slice(lo, min(lo + self.__max_runs, runs)), out, (free, syndromes), (max_iters, want_summary))
+            self.__launch(slice(lo, min(lo + self.__max_runs, runs)), out, inputs, (max_iters, want_summary), warm)
         return out
 
-    def __launch(self, rows: slice, out: DeviceRuns, inputs: tuple[DeviceArray, DeviceArray],
-                 limits: tuple[int, bool]) -> None:
+    def __launch(self, rows: slice, out: DeviceRuns, inputs: tuple[DeviceArray, DeviceArray, DeviceArray | None],
+                 limits: tuple[int, bool], warm: int | None) -> None:
         count = rows.stop - rows.start
         scratch = cp.empty((count, self.__e), self.__dtype)
-        args = (np.int32(self.__m), np.int32(self.__n), np.int32(limits[0]), np.int32(limits[1]), *self.__arrays,
-                inputs[0][rows], inputs[1][rows], out.v2c[rows], scratch, out.llr_sums[rows], out.decisions[rows],
-                out.converged_at[rows], out.score[rows], out.branch[rows])
-        self.__kernel((count,), (_BLOCK,), args)
+        head = (np.int32(self.__m), np.int32(self.__n), np.int32(limits[0]), np.int32(limits[1]))
+        tail = (inputs[0][rows], inputs[1][rows])
+        outputs = (out.v2c[rows], scratch, out.llr_sums[rows], out.decisions[rows], out.converged_at[rows],
+                   out.score[rows], out.branch[rows])
+        seeds, freezing = inputs[2], self.__freezing
+        if seeds is None or freezing is None:
+            self.__kernel((count,), (_BLOCK,), (*head, *self.__arrays, *tail, *outputs))
+            return
+        row_ptr, row_edges, col_ptr, edge_bit, prior, branchable = self.__arrays
+        m, n, e = self.__m, self.__n, self.__e
+        work = (cp.empty((count, n), self.__dtype), cp.empty((count, n), cp.uint8), cp.empty((count, m), cp.uint8),
+                cp.empty((count, 2 * m), self.__dtype), cp.empty((count, m), cp.int32), cp.empty((count, m), cp.int32),
+                cp.empty((count, m), cp.int32), cp.empty((count, 2 * m), cp.int32), cp.empty((count, e), cp.int32),
+                cp.empty((count, n), cp.int32))
+        assert out.frontier_sizes is not None
+        sizes = out.frontier_sizes[rows]
+        self.__frontier_kernel((count,), (_BLOCK,), (*head, np.int32(freezing.warm if warm is None else warm), np.float64(freezing.tau),
+                                                     np.int32(freezing.refresh), row_ptr,
+                                                     row_edges, col_ptr, edge_bit, self.__edge_check, prior, branchable,
+                                                     *tail, seeds[rows], *outputs, *work, sizes))
 
 
 class GpuBeamSearch:
     """IonQ's beam search with all BP on the GPU; see module docstring."""
 
     def __init__(self, problem: DecodingProblem, config: BeamConfig, precision: Precision = FLOAT32,
-                 shot_chunk: int = 1024, beam_memory: int = 2 * 2**30, backend: str = "cuda") -> None:
+                 shot_chunk: int = 1024, beam_memory: int = 2 * 2**30, backend: str = "cuda",
+                 rt_cache_neighbors: bool = False, rt_check_every: int = 1, rt_reorder_geometry: bool = False,
+                 freezing: Freezing | None = None) -> None:
         """``beam_memory`` bounds the device bytes of one beam phase: at most that many
         bytes' worth of shots (≈3 message arrays of 2·beam_width runs each) search together.
-        ``backend``: "cuda" (one kernel per BP run batch) or "rt" (OptiX ray launches)."""
+        ``backend``: "cuda" (one kernel per BP run batch), "rt" (OptiX ray launches) or "rt-ch"
+        (closest-hit min-sum: the RT core computes the check-node minimums; float32 only).
+        RT experiments: ``rt_cache_neighbors`` traverses the static graph once to cache edge IDs;
+        ``rt_check_every`` reduces host convergence checks; ``rt_reorder_geometry`` applies RCM
+        to geometry coordinates only. ``freezing`` (CUDA only): S1 frontier freezing in beam rounds
+        (initial BP is never frozen); :attr:`frontier_totals` then sums its work-list sizes."""
         graph = TannerGraph.from_check_matrix(problem.check_matrix)
         prior_llr = MinSum(graph, problem.priors).prior_llr
         self.__launcher: Launcher
         if backend == "rt":
             from rtbeam.rt.launcher import RtLauncher
-            self.__launcher = RtLauncher(graph, prior_llr, precision)
+            self.__launcher = RtLauncher(graph, prior_llr, precision, check_every=rt_check_every,
+                                         cache_neighbors=rt_cache_neighbors, reorder_geometry=rt_reorder_geometry)
+        elif backend == "rt-ch":
+            from rtbeam.rt.ch_launcher import ChLauncher
+            self.__launcher = ChLauncher(graph, prior_llr, precision, check_every=rt_check_every, rebuild=False)
         else:
-            self.__launcher = BpLauncher(graph, prior_llr, precision)
+            self.__launcher = BpLauncher(graph, prior_llr, precision, freezing=freezing)
+        assert freezing is None or backend == "cuda", "frontier freezing is implemented for the CUDA backend only"
+        self.__freezing = freezing
+        self.frontier_totals = np.zeros(4, np.int64)  # child runs, live checks, frontier edges, frontier bits
         self.__inputs = ChildInputs(problem.check_matrix)
         self.__planner_args = (config, prior_llr, graph.bit_degree > 2)
         self.__config, self.__shot_chunk, self.__n = config, shot_chunk, graph.num_bits
@@ -135,8 +192,12 @@ class GpuBeamSearch:
 
     def __decode_chunk(self, syndromes: Bits) -> Bits:
         runs = syndromes.shape[0]
-        roots = self.__launcher.run(self.__launcher.initial_messages(runs), cp.ones((runs, self.__n), cp.uint8),
-                                    cp.asarray(syndromes), self.__config.initial_iters, want_summary=False)
+        messages, free, syn = self.__launcher.initial_messages(runs), cp.ones((runs, self.__n), cp.uint8), cp.asarray(syndromes)
+        if self.__freezing is not None and self.__freezing.initial_warm is not None:
+            roots = cast(BpLauncher, self.__launcher).run(messages, free, syn, self.__config.initial_iters, want_summary=False,
+                                                           seeds=cp.full(runs, -1, cp.int32), warm=self.__freezing.initial_warm)
+        else:
+            roots = self.__launcher.run(messages, free, syn, self.__config.initial_iters, want_summary=False)
         corrections = cast(Bits, roots.decisions.get())
         planners = list(self.__start_planners(roots, corrections).items())
         for lo in range(0, len(planners), self.__beam_shots):
@@ -162,8 +223,15 @@ class GpuBeamSearch:
         children = [c for _, _, cs in work for c in cs]
         free = np.concatenate([self.__inputs.free_bits(cs) for _, _, cs in work]).astype(np.uint8)
         residual = np.concatenate([self.__inputs.syndromes(syndromes[shot], cs) for shot, _, cs in work])
-        runs = self.__launcher.run(_gather_messages(children), cp.asarray(free), cp.asarray(residual),
-                                   self.__config.iters_per_round, want_summary=True)
+        messages, free_d, residual_d = _gather_messages(children), cp.asarray(free), cp.asarray(residual)
+        if self.__freezing is not None:
+            seeds = cp.asarray(np.array([c.parent.next_bit for c in children], dtype=np.int32))
+            runs = cast(BpLauncher, self.__launcher).run(messages, free_d, residual_d, self.__config.iters_per_round,
+                                                          want_summary=True, seeds=seeds)
+            assert runs.frontier_sizes is not None
+            self.frontier_totals += np.append(len(children), runs.frontier_sizes.sum(axis=0).get())
+        else:
+            runs = self.__launcher.run(messages, free_d, residual_d, self.__config.iters_per_round, want_summary=True)
         summaries = _summaries(runs)
         offset = 0
         for _, planner, cs in work:

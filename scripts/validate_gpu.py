@@ -1,6 +1,6 @@
 """Check the CUDA decoder against IonQ's recorded outputs on the golden shot sets.
 
-Usage: validate_gpu.py [max_shots] [cuda|rt]. float64 must be bit-identical; float32 is reported as
+Usage: validate_gpu.py [max_shots] [cuda|rt|rt-ch]. float64 must be bit-identical; float32 is reported as
 agreement rate, syndrome-satisfied rate and logical failures; for the RT backend, float32 is also
 compared with the CUDA float32 decoder (should be identical). Writes results/{gpu,rt}_validation.json.
 """
@@ -30,7 +30,7 @@ def main(max_shots: int, backend: str) -> None:
         problem = DecodingProblem.from_stim_file(CIRCUITS / f"{shots.stem}.stim")
         for run_file in sorted(folder.glob("beam*.npz")):
             expected = DecoderRun.load(run_file)
-            for precision in (FLOAT64, FLOAT32):
+            for precision in (FLOAT32,) if backend == "rt-ch" else (FLOAT64, FLOAT32):
                 key = f"{folder.name}/{expected.decoder}/{precision.name}"
                 report[key] = compare(problem, shots, expected, precision, max_shots, backend)
                 print(key, report[key], flush=True)

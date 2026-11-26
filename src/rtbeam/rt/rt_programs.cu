@@ -57,7 +57,21 @@ static __device__ void row_ray(int c, size_t r)
 {
     const int m = params.m, n = params.n;
     Hits hits;
-    trace(make_float3(-1.0f, static_cast<float>(c), 0.0f), make_float3(1.0f, 0.0f, 0.0f), n + 1.0f, &hits);
+    if (params.cache_neighbors && (params.mode == RT_CHECK || params.mode == RT_SYNDROME)) {
+        const int count = reinterpret_cast<const int*>(params.row_counts)[c];
+        const int* cached = reinterpret_cast<const int*>(params.row_neighbors) + c * MAX_HITS;
+        hits.count = count;
+        for (int k = 0; k < count; ++k) hits.edges[k] = cached[k];
+    } else {
+        const int* coords = reinterpret_cast<const int*>(params.check_coord);
+        trace(make_float3(-1.0f, static_cast<float>(coords[c]), 0.0f), make_float3(1.0f, 0.0f, 0.0f), n + 1.0f, &hits);
+    }
+    if (params.mode == RT_BUILD_ROWS) {
+        reinterpret_cast<int*>(params.row_counts)[c] = hits.count;
+        int* cached = reinterpret_cast<int*>(params.row_neighbors) + c * MAX_HITS;
+        for (int k = 0; k < hits.count; ++k) cached[k] = hits.edges[k];
+        return;
+    }
     int* out = reinterpret_cast<int*>(params.unsat);
     if (params.mode == RT_COUNT_ROWS) { out[c] = hits.count; return; }
 
@@ -103,14 +117,36 @@ static __device__ void column_ray(int b, size_t r)
     const unsigned char* fr = reinterpret_cast<const unsigned char*>(params.free_all) + r * n;
     if (params.mode == RT_BIT && !fr[b]) return;
     Hits hits;
-    trace(make_float3(static_cast<float>(b), -1.0f, 0.0f), make_float3(0.0f, 1.0f, 0.0f), params.m + 1.0f, &hits);
+    if (params.cache_neighbors && params.mode == RT_BIT) {
+        const int count = reinterpret_cast<const int*>(params.col_counts)[b];
+        const int* cached = reinterpret_cast<const int*>(params.col_neighbors) + b * MAX_HITS;
+        hits.count = count;
+        for (int k = 0; k < count; ++k) hits.edges[k] = cached[k];
+    } else {
+        const int* coords = reinterpret_cast<const int*>(params.bit_coord);
+        trace(make_float3(static_cast<float>(coords[b]), -1.0f, 0.0f), make_float3(0.0f, 1.0f, 0.0f), params.m + 1.0f, &hits);
+    }
+    if (params.mode == RT_BUILD_COLS) {
+        for (int i = 1; i < hits.count; ++i) {
+            const int e = hits.edges[i];
+            int j = i - 1;
+            for (; j >= 0 && hits.edges[j] > e; --j) hits.edges[j + 1] = hits.edges[j];
+            hits.edges[j + 1] = e;
+        }
+        reinterpret_cast<int*>(params.col_counts)[b] = hits.count;
+        int* cached = reinterpret_cast<int*>(params.col_neighbors) + b * MAX_HITS;
+        for (int k = 0; k < hits.count; ++k) cached[k] = hits.edges[k];
+        return;
+    }
     if (params.mode == RT_COUNT_COLS) { reinterpret_cast<int*>(params.unsat)[b] = hits.count; return; }
 
-    for (int i = 1; i < hits.count; ++i) {  // hit order is unspecified: sort into CSC order
-        const int e = hits.edges[i];
-        int j = i - 1;
-        for (; j >= 0 && hits.edges[j] > e; --j) hits.edges[j + 1] = hits.edges[j];
-        hits.edges[j + 1] = e;
+    if (!(params.cache_neighbors && params.mode == RT_BIT)) {
+        for (int i = 1; i < hits.count; ++i) {  // hit order is unspecified: sort into CSC order
+            const int e = hits.edges[i];
+            int j = i - 1;
+            for (; j >= 0 && hits.edges[j] > e; --j) hits.edges[j + 1] = hits.edges[j];
+            hits.edges[j + 1] = e;
+        }
     }
     REAL* V = reinterpret_cast<REAL*>(params.v2c) + r * params.num_edges;
     const REAL* C = reinterpret_cast<const REAL*>(params.c2v) + r * params.num_edges;
@@ -125,9 +161,16 @@ static __device__ void column_ray(int b, size_t r)
 extern "C" __global__ void __raygen__bp()
 {
     const uint3 idx = optixGetLaunchIndex();
-    const size_t r = idx.y;
     const int mode = params.mode;
+    if (mode == RT_BIT_COMPACT) {
+        const int flat = reinterpret_cast<const int*>(params.active_tasks)[idx.x];
+        const int b = flat % params.n;
+        const size_t r = flat / params.n;
+        if (!reinterpret_cast<const int*>(params.done_at)[r]) column_ray(b, r);
+        return;
+    }
+    const size_t r = idx.y;
     if (mode <= RT_SYNDROME && reinterpret_cast<const int*>(params.done_at)[r]) return;
-    if (mode == RT_BIT || mode == RT_COUNT_COLS) column_ray(static_cast<int>(idx.x), r);
+    if (mode == RT_BIT || mode == RT_COUNT_COLS || mode == RT_BUILD_COLS) column_ray(static_cast<int>(idx.x), r);
     else row_ray(static_cast<int>(idx.x), r);
 }
