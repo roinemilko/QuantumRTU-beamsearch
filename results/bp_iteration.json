@@ -1,38 +1,74 @@
 {
   "1": {
-    "cuda_us_per_iter": 147.3075341588507,
-    "rt_us_per_iter": 115.96200056374073,
-    "rt_check_pass_us": 71.8559980392456,
-    "rt_bit_pass_us": 22.58879989385605
+    "cuda_us_per_iter": 140.9136321550856,
+    "rt_baseline_us_per_iter": 113.24626781667273,
+    "rt_cached_neighbors_us_per_iter": 61.60676712170243,
+    "rt_check_every_4_us_per_iter": 101.30893206223845,
+    "rt_check_every_8_us_per_iter": 99.96160127532978,
+    "rt_rcm_geometry_us_per_iter": 133.29853342535594,
+    "rt_cache_check4_rcm_us_per_iter": 51.079533295705914,
+    "rt_us_per_iter": 113.24626781667273,
+    "rt_check_pass_us": 69.35359835624693,
+    "rt_bit_pass_us": 22.31840044260025
   },
   "8": {
-    "cuda_us_per_iter": 154.69370021795234,
-    "rt_us_per_iter": 179.8817344630758,
-    "rt_check_pass_us": 94.23199892044067,
-    "rt_bit_pass_us": 59.07520055770875
+    "cuda_us_per_iter": 153.65913471517464,
+    "rt_baseline_us_per_iter": 180.95656608541807,
+    "rt_cached_neighbors_us_per_iter": 85.21313429810107,
+    "rt_check_every_4_us_per_iter": 163.4158989569793,
+    "rt_check_every_8_us_per_iter": 161.67200131652257,
+    "rt_rcm_geometry_us_per_iter": 192.6635333802551,
+    "rt_cache_check4_rcm_us_per_iter": 79.14653397165239,
+    "rt_us_per_iter": 180.95656608541807,
+    "rt_check_pass_us": 94.90560293197632,
+    "rt_bit_pass_us": 59.713602066040046
   },
   "64": {
-    "cuda_us_per_iter": 250.14539908928177,
-    "rt_us_per_iter": 764.5576998280982,
-    "rt_check_pass_us": 385.915207862854,
-    "rt_bit_pass_us": 339.465594291687
+    "cuda_us_per_iter": 250.73876798463365,
+    "rt_baseline_us_per_iter": 760.9591993968934,
+    "rt_cached_neighbors_us_per_iter": 283.44663442112505,
+    "rt_check_every_4_us_per_iter": 744.8871658804516,
+    "rt_check_every_8_us_per_iter": 740.6752983418604,
+    "rt_rcm_geometry_us_per_iter": 772.9476996852705,
+    "rt_cache_check4_rcm_us_per_iter": 290.01473255145055,
+    "rt_us_per_iter": 760.9591993968934,
+    "rt_check_pass_us": 375.7359981536865,
+    "rt_bit_pass_us": 338.18719387054443
   },
   "256": {
-    "cuda_us_per_iter": 953.1127657586088,
-    "rt_us_per_iter": 2539.2048992216587,
-    "rt_check_pass_us": 1111.1599922180176,
-    "rt_bit_pass_us": 1298.7263679504395
+    "cuda_us_per_iter": 935.7787009018163,
+    "rt_baseline_us_per_iter": 2549.1465329347798,
+    "rt_cached_neighbors_us_per_iter": 1170.6682659375172,
+    "rt_check_every_4_us_per_iter": 2382.421233536055,
+    "rt_check_every_8_us_per_iter": 2251.4056666598967,
+    "rt_rcm_geometry_us_per_iter": 2351.703067931036,
+    "rt_cache_check4_rcm_us_per_iter": 1240.6567674285423,
+    "rt_us_per_iter": 2549.1465329347798,
+    "rt_check_pass_us": 997.9311943054199,
+    "rt_bit_pass_us": 1205.0496101379395
   },
   "1024": {
-    "cuda_us_per_iter": 3419.589866340781,
-    "rt_us_per_iter": 8733.727567596361,
-    "rt_check_pass_us": 3919.3374633789067,
-    "rt_bit_pass_us": 4670.459365844727
+    "cuda_us_per_iter": 3348.463432242473,
+    "rt_baseline_us_per_iter": 8626.285699817041,
+    "rt_cached_neighbors_us_per_iter": 4378.201599077632,
+    "rt_check_every_4_us_per_iter": 8604.992468220493,
+    "rt_check_every_8_us_per_iter": 8608.651834462458,
+    "rt_rcm_geometry_us_per_iter": 9007.477667182684,
+    "rt_cache_check4_rcm_us_per_iter": 4854.9005005043,
+    "rt_us_per_iter": 8626.285699817041,
+    "rt_check_pass_us": 3825.6015777587886,
+    "rt_bit_pass_us": 4663.828659057617
   },
   "2048": {
-    "cuda_us_per_iter": 6863.831565715373,
-    "rt_us_per_iter": 17342.33223251067,
-    "rt_check_pass_us": 7802.8961181640625,
-    "rt_bit_pass_us": 9292.50259399414
+    "cuda_us_per_iter": 6745.024766617765,
+    "rt_baseline_us_per_iter": 17173.132566191878,
+    "rt_cached_neighbors_us_per_iter": 8673.143999961516,
+    "rt_check_every_4_us_per_iter": 17143.88103185532,
+    "rt_check_every_8_us_per_iter": 17158.162966370583,
+    "rt_rcm_geometry_us_per_iter": 17880.179300361004,
+    "rt_cache_check4_rcm_us_per_iter": 9653.69896730408,
+    "rt_us_per_iter": 17173.132566191878,
+    "rt_check_pass_us": 7629.998779296874,
+    "rt_bit_pass_us": 9297.02377319336
   }
 }

@@ -69,18 +69,20 @@ def throughput_panel(ax: Axes, gpu: dict, cpu: dict) -> None:
     ax.set_xscale("log")
     points = gpu[f"{CASE}/beam8_230/float32"]["throughput_shots_per_s"]
     batches = [int(b) for b in points]
-    us = [1e6 / points[str(b)] for b in batches]
-    ax.plot(batches, us, color=GPU_COLOR, lw=2, marker="o", ms=7, zorder=3)
-    for b, u in zip(batches, us):
-        ax.text(b, u * 1.18, f"{u:.0f}", ha="center", fontsize=8.5, color=INK)
-    ax.axhline(cpu[CASE]["beam8_230"]["mean_ms"] * 1e3, color=CPU_COLOR, lw=1.5, ls="--")
-    ax.text(1.1, cpu[CASE]["beam8_230"]["mean_ms"] * 1e3 * 1.12, "CPU beam8, 1 core: 3,990 µs", fontsize=9, color=INK)
-    ax.axhline(SOTA_US_PER_SHOT, color=INK, lw=1.2, ls=":")
-    ax.text(30, SOTA_US_PER_SHOT * 1.12, "SOTA ref: cudaq-qec BP+OSD, A100, batch 256: 510 µs", fontsize=9, color=INK)
-    ax.set_ylim(10, 20000)
+    rates = [points[str(b)] for b in batches]
+    ax.plot(batches, rates, color=GPU_COLOR, lw=2, marker="o", ms=7, zorder=3)
+    for b, rate in zip(batches, rates):
+        ax.text(b, rate * 1.18, f"{rate / 1000:.1f}k" if rate >= 10000 else f"{rate:,.0f}", ha="center", fontsize=8.5, color=INK)
+    cpu_rate = 1e3 / cpu[CASE]["beam8_230"]["mean_ms"]
+    ax.axhline(cpu_rate, color=CPU_COLOR, lw=1.5, ls="--")
+    ax.text(1.1, cpu_rate * 1.12, f"CPU beam8, 1 core: {cpu_rate:,.0f} shots/s", fontsize=9, color=INK)
+    sota_rate = 1e6 / SOTA_US_PER_SHOT
+    ax.axhline(sota_rate, color=INK, lw=1.2, ls=":")
+    ax.text(45, sota_rate * 0.78, f"SOTA ref: cudaq-qec BP+OSD, A100, batch 256: {sota_rate:,.0f} shots/s", fontsize=9, color=INK)
+    ax.set_ylim(10, 40000)
     ax.set_xlabel("shots per decode_batch call (log)", color=MUTED)
-    ax.set_ylabel("amortized µs per shot (log)", color=MUTED)
-    ax.set_title("Throughput, beam8 float32: time per shot vs batch size", loc="left", fontsize=11, color=INK)
+    ax.set_ylabel("shots / s (log)", color=MUTED)
+    ax.set_title("Throughput, beam8 float32: shots per second vs batch size", loc="left", fontsize=11, color=INK)
 
 
 def style(ax: Axes, log: bool) -> None:
