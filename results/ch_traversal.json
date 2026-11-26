@@ -1,0 +1,146 @@
+{
+  "1/0": {
+    "frontier_edge_share": 0.14788732394366197,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 21.272534132003784,
+    "trace_refitted_bvh_us": 49.90080197652181
+  },
+  "1/1": {
+    "frontier_edge_share": 0.012389149713093375,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 19.964800278345745,
+    "trace_refitted_bvh_us": 60.50560077031454
+  },
+  "1/2": {
+    "frontier_edge_share": 0.010139540949400104,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 20.67199945449829,
+    "trace_refitted_bvh_us": 30.14826575915019
+  },
+  "1/3": {
+    "frontier_edge_share": 0.0021517996870109544,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 18.398932615915935,
+    "trace_refitted_bvh_us": 27.91680097579956
+  },
+  "1/5": {
+    "frontier_edge_share": 0.002347417840375587,
+    "converged_share": 1.0,
+    "trace_fresh_bvh_us": 17.5434668858846,
+    "trace_refitted_bvh_us": 28.818132479985554
+  },
+  "1/10": {
+    "frontier_edge_share": 0.002347417840375587,
+    "converged_share": 1.0,
+    "trace_fresh_bvh_us": 17.178666591644287,
+    "trace_refitted_bvh_us": 29.633067051569622
+  },
+  "1/20": {
+    "frontier_edge_share": 0.002347417840375587,
+    "converged_share": 1.0,
+    "trace_fresh_bvh_us": 17.314134041468304,
+    "trace_refitted_bvh_us": 29.22346591949463
+  },
+  "1/30": {
+    "frontier_edge_share": 0.002347417840375587,
+    "converged_share": 1.0,
+    "trace_fresh_bvh_us": 17.810134092966717,
+    "trace_refitted_bvh_us": 30.080000559488933
+  },
+  "64/0": {
+    "frontier_edge_share": 0.14788732394366197,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 122.42773373921712,
+    "trace_refitted_bvh_us": 90.7253344853719
+  },
+  "64/1": {
+    "frontier_edge_share": 0.012077383281168492,
+    "converged_share": 0.046875,
+    "trace_fresh_bvh_us": 121.21919790903728,
+    "trace_refitted_bvh_us": 161.51466369628906
+  },
+  "64/2": {
+    "frontier_edge_share": 0.01565760302556077,
+    "converged_share": 0.109375,
+    "trace_fresh_bvh_us": 124.2474635442098,
+    "trace_refitted_bvh_us": 130.2453358968099
+  },
+  "64/3": {
+    "frontier_edge_share": 0.008287281559728743,
+    "converged_share": 0.140625,
+    "trace_fresh_bvh_us": 55.35893440246582,
+    "trace_refitted_bvh_us": 175.12319882710776
+  },
+  "64/5": {
+    "frontier_edge_share": 0.004880265388628065,
+    "converged_share": 0.375,
+    "trace_fresh_bvh_us": 56.33386770884196,
+    "trace_refitted_bvh_us": 128.4832000732422
+  },
+  "64/10": {
+    "frontier_edge_share": 0.002251137030516432,
+    "converged_share": 0.671875,
+    "trace_fresh_bvh_us": 56.141865253448486,
+    "trace_refitted_bvh_us": 126.28906567891438
+  },
+  "64/20": {
+    "frontier_edge_share": 0.001669886215440793,
+    "converged_share": 0.90625,
+    "trace_fresh_bvh_us": 129.1424036026001,
+    "trace_refitted_bvh_us": 246.24746640523276
+  },
+  "64/30": {
+    "frontier_edge_share": 0.0016489999021909233,
+    "converged_share": 0.96875,
+    "trace_fresh_bvh_us": 135.26293436686197,
+    "trace_refitted_bvh_us": 275.2895991007487
+  },
+  "256/0": {
+    "frontier_edge_share": 0.14788732394366197,
+    "converged_share": 0.0,
+    "trace_fresh_bvh_us": 363.42932383219403,
+    "trace_refitted_bvh_us": 293.48586400349933
+  },
+  "256/1": {
+    "frontier_edge_share": 0.01222829962995566,
+    "converged_share": 0.01171875,
+    "trace_fresh_bvh_us": 313.12745412190753,
+    "trace_refitted_bvh_us": 452.23251978556317
+  },
+  "256/2": {
+    "frontier_edge_share": 0.01576088839169275,
+    "converged_share": 0.046875,
+    "trace_fresh_bvh_us": 460.5120023091634,
+    "trace_refitted_bvh_us": 726.1749267578125
+  },
+  "256/3": {
+    "frontier_edge_share": 0.00828460709278821,
+    "converged_share": 0.07421875,
+    "trace_fresh_bvh_us": 392.3274676005046,
+    "trace_refitted_bvh_us": 827.3087819417318
+  },
+  "256/5": {
+    "frontier_edge_share": 0.004546211732198748,
+    "converged_share": 0.35546875,
+    "trace_fresh_bvh_us": 215.27466773986816,
+    "trace_refitted_bvh_us": 548.2058842976888
+  },
+  "256/10": {
+    "frontier_edge_share": 0.002231396917383933,
+    "converged_share": 0.60546875,
+    "trace_fresh_bvh_us": 418.1920051574707,
+    "trace_refitted_bvh_us": 535.7301076253256
+  },
+  "256/20": {
+    "frontier_edge_share": 0.0015634169600938967,
+    "converged_share": 0.88671875,
+    "trace_fresh_bvh_us": 478.84693145751953,
+    "trace_refitted_bvh_us": 599.8602549235026
+  },
+  "256/30": {
+    "frontier_edge_share": 0.0015017768648930621,
+    "converged_share": 0.95703125,
+    "trace_fresh_bvh_us": 453.9552052815755,
+    "trace_refitted_bvh_us": 660.3498458862305
+  }
+}
