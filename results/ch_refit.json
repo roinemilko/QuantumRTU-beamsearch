@@ -1,0 +1,98 @@
+{
+  "1/warm0": {
+    "build_with_depths_us": 390.70239067077637,
+    "refit_us": 101.9055962562561,
+    "check_pass_rt_only_us": 21.716800332069397,
+    "gas_mbytes": 1.764404296875,
+    "triangles": 30672,
+    "minimums_exact": 1.0
+  },
+  "1/warm3": {
+    "build_with_depths_us": 509.46240425109863,
+    "refit_us": 199.8528003692627,
+    "check_pass_rt_only_us": 25.24160146713257,
+    "gas_mbytes": 1.764404296875,
+    "triangles": 30672,
+    "minimums_exact": 1.0
+  },
+  "8/warm0": {
+    "build_with_depths_us": 1453.3663749694824,
+    "refit_us": 260.31999588012695,
+    "check_pass_rt_only_us": 20.343999564647675,
+    "gas_mbytes": 14.0848388671875,
+    "triangles": 245376,
+    "minimums_exact": 1.0
+  },
+  "8/warm3": {
+    "build_with_depths_us": 854.2464256286621,
+    "refit_us": 275.929594039917,
+    "check_pass_rt_only_us": 20.8624005317688,
+    "gas_mbytes": 14.0848388671875,
+    "triangles": 245376,
+    "minimums_exact": 1.0
+  },
+  "16/warm0": {
+    "build_with_depths_us": 2186.4320755004883,
+    "refit_us": 354.33759689331055,
+    "check_pass_rt_only_us": 23.08479994535446,
+    "gas_mbytes": 28.162353515625,
+    "triangles": 490752,
+    "minimums_exact": 1.0
+  },
+  "16/warm3": {
+    "build_with_depths_us": 1502.1568298339844,
+    "refit_us": 518.2000160217285,
+    "check_pass_rt_only_us": 26.761600375175476,
+    "gas_mbytes": 28.162353515625,
+    "triangles": 490752,
+    "minimums_exact": 1.0
+  },
+  "64/warm0": {
+    "build_with_depths_us": 7659.1278076171875,
+    "refit_us": 1167.0368194580078,
+    "check_pass_rt_only_us": 53.782397508621216,
+    "gas_mbytes": 112.6270751953125,
+    "triangles": 1963008,
+    "minimums_exact": 1.0
+  },
+  "64/warm3": {
+    "build_with_depths_us": 6121.977615356445,
+    "refit_us": 1663.7504577636719,
+    "check_pass_rt_only_us": 55.47040104866028,
+    "gas_mbytes": 112.6270751953125,
+    "triangles": 1963008,
+    "minimums_exact": 1.0
+  },
+  "128/warm0": {
+    "build_with_depths_us": 15741.328430175781,
+    "refit_us": 2082.040023803711,
+    "check_pass_rt_only_us": 130.10560274124146,
+    "gas_mbytes": 225.2520751953125,
+    "triangles": 3926016,
+    "minimums_exact": 1.0
+  },
+  "128/warm3": {
+    "build_with_depths_us": 12224.960327148438,
+    "refit_us": 3191.422462463379,
+    "check_pass_rt_only_us": 187.61600255966187,
+    "gas_mbytes": 225.2520751953125,
+    "triangles": 3926016,
+    "minimums_exact": 1.0
+  },
+  "256/warm0": {
+    "build_with_depths_us": 30711.2548828125,
+    "refit_us": 4656.795120239258,
+    "check_pass_rt_only_us": 155.27679920196533,
+    "gas_mbytes": 450.502197265625,
+    "triangles": 7852032,
+    "minimums_exact": 1.0
+  },
+  "256/warm3": {
+    "build_with_depths_us": 23987.567138671875,
+    "refit_us": 5630.158233642578,
+    "check_pass_rt_only_us": 249.01440143585205,
+    "gas_mbytes": 450.502197265625,
+    "triangles": 7852032,
+    "minimums_exact": 1.0
+  }
+}

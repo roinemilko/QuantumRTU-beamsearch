@@ -1,0 +1,34 @@
+{
+  "1": {
+    "cuda_us_per_iter": 171.978201251477,
+    "rt_us_per_iter": 115.67956923196714,
+    "ch_refit_us_per_iter": 336.6194005745153,
+    "ch_refit_check4_us_per_iter": 314.228570399185,
+    "ch_refit_gpu_us": 156.1344027519226,
+    "ch_min_trace_gpu_us": 21.71359956264496
+  },
+  "8": {
+    "cuda_us_per_iter": 188.28229901070395,
+    "rt_us_per_iter": 184.6039667725563,
+    "ch_refit_us_per_iter": 359.3365312553942,
+    "ch_refit_check4_us_per_iter": 340.0090305755536,
+    "ch_refit_gpu_us": 160.07039546966553,
+    "ch_min_trace_gpu_us": 20.28000056743622
+  },
+  "64": {
+    "cuda_us_per_iter": 315.7481978026529,
+    "rt_us_per_iter": 959.2976343507568,
+    "ch_refit_us_per_iter": 2453.0990320878723,
+    "ch_refit_check4_us_per_iter": 2014.7641655057669,
+    "ch_refit_gpu_us": 1318.3664321899414,
+    "ch_min_trace_gpu_us": 82.99999833106995
+  },
+  "256": {
+    "cuda_us_per_iter": 1018.6546676171323,
+    "rt_us_per_iter": 2987.4072992242873,
+    "ch_refit_us_per_iter": 8410.266833379865,
+    "ch_refit_check4_us_per_iter": 8217.487701525291,
+    "ch_refit_gpu_us": 4699.7711181640625,
+    "ch_min_trace_gpu_us": 155.24319410324097
+  }
+}

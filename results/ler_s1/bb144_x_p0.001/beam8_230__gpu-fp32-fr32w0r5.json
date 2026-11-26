@@ -1,0 +1,1 @@
+{"circuit": "BB[[144,12,12]],memory_X,error_rate=0.001,syndrome_rounds=12", "decoder": "beam8_230/gpu-fp32-fr32w0r5", "batch": 4096, "batches": 977, "shots": 4001792, "errors": 6, "unsatisfied": 5, "seconds": 181.04295161925256, "failed": [901322, 1270128, 1974033, 2383697, 2938617, 3324591]}

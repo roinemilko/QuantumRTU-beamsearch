@@ -1,7 +1,8 @@
 """Check the CUDA decoder against IonQ's recorded outputs on the golden shot sets.
 
-Usage: validate_gpu.py [max_shots]. float64 must be bit-identical; float32 is reported as
-agreement rate, syndrome-satisfied rate and logical failures. Writes results/gpu_validation.json.
+Usage: validate_gpu.py [max_shots] [cuda|rt|rt-ch]. float64 must be bit-identical; float32 is reported as
+agreement rate, syndrome-satisfied rate and logical failures; for the RT backend, float32 is also
+compared with the CUDA float32 decoder (should be identical). Writes results/{gpu,rt}_validation.json.
 """
 
 from __future__ import annotations
@@ -22,31 +23,38 @@ GOLDEN = ROOT / "data" / "golden"
 CIRCUITS = ROOT / "external" / "BeamSearchDecoder" / "StimCircuit"
 
 
-def main(max_shots: int) -> None:
+def main(max_shots: int, backend: str) -> None:
     report: dict[str, dict[str, object]] = {}
     for folder in sorted(p for p in GOLDEN.iterdir() if p.is_dir()):
         shots = ShotSet.load(folder / "shots.npz")
         problem = DecodingProblem.from_stim_file(CIRCUITS / f"{shots.stem}.stim")
         for run_file in sorted(folder.glob("beam*.npz")):
             expected = DecoderRun.load(run_file)
-            for precision in (FLOAT64, FLOAT32):
+            for precision in (FLOAT32,) if backend == "rt-ch" else (FLOAT64, FLOAT32):
                 key = f"{folder.name}/{expected.decoder}/{precision.name}"
-                report[key] = compare(problem, shots, expected, precision, max_shots)
+                report[key] = compare(problem, shots, expected, precision, max_shots, backend)
                 print(key, report[key], flush=True)
-    (ROOT / "results" / "gpu_validation.json").write_text(json.dumps(report, indent=2))
+    name = "gpu_validation.json" if backend == "cuda" else f"{backend}_validation.json"
+    (ROOT / "results" / name).write_text(json.dumps(report, indent=2))
 
 
 def compare(problem: DecodingProblem, shots: ShotSet, expected: DecoderRun, precision: Precision,
-            max_shots: int) -> dict[str, object]:
+            max_shots: int, backend: str) -> dict[str, object]:
     count = min(max_shots, shots.syndromes.shape[0]) // (10 if "32res" in expected.decoder else 1)
     syndromes = shots.syndromes[:count]
-    actual = GpuBeamSearch(problem, PRESETS[expected.decoder], precision).decode_batch(syndromes).corrections
+    config = PRESETS[expected.decoder]
+    actual = GpuBeamSearch(problem, config, precision, backend=backend).decode_batch(syndromes).corrections
     same = np.all(actual == expected.corrections[:count], axis=1)
     satisfied = np.all(problem.syndromes_of(actual) == syndromes, axis=1)
     failed = np.any(problem.logical_flips(actual) != shots.observable_flips[:count], axis=1)
-    return {"shots": count, "identical": int(same.sum()), "syndrome_satisfied": int(satisfied.sum()),
-            "logical_failures": int(failed.sum()), "first_mismatches": np.flatnonzero(~same)[:10].tolist()}
+    report: dict[str, object] = {
+        "shots": count, "identical": int(same.sum()), "syndrome_satisfied": int(satisfied.sum()),
+        "logical_failures": int(failed.sum()), "first_mismatches": np.flatnonzero(~same)[:10].tolist()}
+    if backend != "cuda" and precision is FLOAT32:
+        cuda = GpuBeamSearch(problem, config, precision).decode_batch(syndromes).corrections
+        report["identical_to_cuda_float32"] = int(np.all(actual == cuda, axis=1).sum())
+    return report
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]) if len(sys.argv) > 1 else 2000)
+    main(int(sys.argv[1]) if len(sys.argv) > 1 else 2000, sys.argv[2] if len(sys.argv) > 2 else "cuda")

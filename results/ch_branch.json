@@ -1,0 +1,37 @@
+{
+  "1": {
+    "agreement": 1.0,
+    "same_min_value": 1.0,
+    "cuda_branch_only_us": 31.46773378054301,
+    "rt_branch_us": 306.8874677022298,
+    "cuda_summary_us": 599.0058898925781
+  },
+  "16": {
+    "agreement": 1.0,
+    "same_min_value": 1.0,
+    "cuda_branch_only_us": 20.74986696243286,
+    "rt_branch_us": 346.12693786621094,
+    "cuda_summary_us": 536.7818832397461
+  },
+  "64": {
+    "agreement": 1.0,
+    "same_min_value": 1.0,
+    "cuda_branch_only_us": 18.39039921760559,
+    "rt_branch_us": 1074.8191833496094,
+    "cuda_summary_us": 618.4960047403971
+  },
+  "256": {
+    "agreement": 1.0,
+    "same_min_value": 1.0,
+    "cuda_branch_only_us": 45.090134938557945,
+    "rt_branch_us": 2619.726816813151,
+    "cuda_summary_us": 975.5306879679362
+  },
+  "1024": {
+    "agreement": 1.0,
+    "same_min_value": 1.0,
+    "cuda_branch_only_us": 268.9706802368164,
+    "rt_branch_us": 9118.964640299479,
+    "cuda_summary_us": 3832.5589497884116
+  }
+}
