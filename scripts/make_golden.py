@@ -43,6 +43,10 @@ JOBS = (
         ("beam8_230", "beam32_340", "beam64_640", "bp30+osd")),
     Job("bb144_z_p0.001_32res", BB144_Z.format(p="0.001"), 1_000, 1003, ("beam64_32res_640",)),
     Job("bb144_z_p0.002", BB144_Z.format(p="0.002"), 2_000, 1004, ("beam8_230", "beam32_340")),
+    # 2026-11-26: 10k sets at higher p, where most shots reach a beam round (p = 0.001 mostly times the first BP).
+    # New keys, so the 2k stress set above stays as it is. Run with: make_golden.py bb144_z_p0.002_10k bb144_z_p0.003_10k
+    Job("bb144_z_p0.002_10k", BB144_Z.format(p="0.002"), 10_000, 1005, ("beam8_230", "beam32_340")),
+    Job("bb144_z_p0.003_10k", BB144_Z.format(p="0.003"), 10_000, 1006, ("beam8_230", "beam32_340")),
 )
 
 
